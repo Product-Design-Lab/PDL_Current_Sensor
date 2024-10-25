@@ -43,7 +43,7 @@ void PDL_Current_Sensor::Channel_t::print() const
 void PDL_Current_Sensor::Channel_t::read()
 {
     adcVal = analogRead(pin);
-    current = adcVal * adcToCurrentRatio;
+    current = adcToCurrentRatio * adcVal;
 }
 
 // Constructor for PDL_Current_Sensor to initialize channels dynamically
@@ -88,6 +88,7 @@ PDL_Current_Sensor::~PDL_Current_Sensor()
 void PDL_Current_Sensor::printTask(void *pvParameters)
 {
     PDL_Current_Sensor *sensor = static_cast<PDL_Current_Sensor *>(pvParameters);
+    Serial.printf("Starting PrintTask with %d channels, sampling period: %d ms\n", sensor->channelNum, sensor->samplingPeriodMs);
 
     while (true)
     {
@@ -120,6 +121,17 @@ void PDL_Current_Sensor::start(uint32_t period_ms)
             // Handle task creation failure as needed
         }
     }
+}
+
+// Overloaded start() function that uses the existing samplingPeriodMs
+void PDL_Current_Sensor::start()
+{
+    if (this->samplingPeriodMs == 0)
+    {
+        Serial.println("Sampling period not set. Please set the sampling period before starting the task.");
+        return;
+    }
+    start(this->samplingPeriodMs);
 }
 
 bool PDL_Current_Sensor::set_sampling_period(uint32_t period_ms)
